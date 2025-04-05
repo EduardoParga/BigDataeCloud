@@ -24,6 +24,12 @@ public class PedidoController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    // Novo endpoint GET básico para evitar erro 405
+    @GetMapping
+    public String home() {
+        return "Endpoint de pedidos ativo. Use POST para criar pedidos.";
+    }
+
     @PostMapping
     public Object criarPedido(@RequestBody Pedido pedido) {
         Usuario usuario = usuarioRepository.findById(pedido.getIdUsuario()).orElse(null);
@@ -68,7 +74,3 @@ public class PedidoController {
         return relatorio;
     }
 }
-
-/*teste
-
- */

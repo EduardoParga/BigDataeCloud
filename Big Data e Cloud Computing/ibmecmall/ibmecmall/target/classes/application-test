@@ -1,0 +1,6 @@
+spring.autoconfigure.exclude=\
+  com.azure.spring.autoconfigure.context.AzureContextAutoConfiguration,\
+  com.azure.spring.autoconfigure.aad.AADAuthenticationFilterAutoConfiguration,\
+  com.azure.spring.autoconfigure.aad.AADAppRoleStatelessAuthenticationFilterAutoConfiguration
+
+spring.main.allow-bean-definition-overriding=true

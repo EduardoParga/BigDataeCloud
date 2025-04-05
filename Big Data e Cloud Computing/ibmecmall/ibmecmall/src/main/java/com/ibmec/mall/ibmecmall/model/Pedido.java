@@ -1,13 +1,16 @@
 package com.ibmec.mall.ibmecmall.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-@Document(collection = "pedidos")
+@Entity
+@Table(name = "pedidos")
 public class Pedido {
 
     @Id
     private String id;
+
     private String idUsuario;
     private String idProduto;
     private int quantidade;
@@ -17,36 +20,36 @@ public class Pedido {
         return id;
     }
 
-    public String getIdUsuario() {
-        return idUsuario;
-    }
-
-    public String getIdProduto() {
-        return idProduto;
-    }
-
-    public int getQuantidade() {
-        return quantidade;
-    }
-
-    public double getTotal() {
-        return total;
-    }
-
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getIdUsuario() {
+        return idUsuario;
     }
 
     public void setIdUsuario(String idUsuario) {
         this.idUsuario = idUsuario;
     }
 
+    public String getIdProduto() {
+        return idProduto;
+    }
+
     public void setIdProduto(String idProduto) {
         this.idProduto = idProduto;
     }
 
+    public int getQuantidade() {
+        return quantidade;
+    }
+
     public void setQuantidade(int quantidade) {
         this.quantidade = quantidade;
+    }
+
+    public double getTotal() {
+        return total;
     }
 
     public void setTotal(double total) {
