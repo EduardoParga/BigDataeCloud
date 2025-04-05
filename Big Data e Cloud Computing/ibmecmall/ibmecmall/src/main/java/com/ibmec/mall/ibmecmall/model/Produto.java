@@ -1,9 +1,11 @@
 package com.ibmec.mall.ibmecmall.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-@Document(collection = "produtos")
+@Entity
+@Table(name = "produtos")
 public class Produto {
 
     @Id
@@ -14,7 +16,6 @@ public class Produto {
     private String categoria;
     private Integer estoque;
 
-    // Getters e Setters
     public String getId() {
         return id;
     }
