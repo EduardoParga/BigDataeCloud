@@ -69,6 +69,3 @@ public class PedidoController {
     }
 }
 
-/*Teste
-
- */
