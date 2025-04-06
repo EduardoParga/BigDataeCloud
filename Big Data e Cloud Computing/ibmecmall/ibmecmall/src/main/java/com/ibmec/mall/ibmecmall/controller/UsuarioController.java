@@ -14,22 +14,35 @@ public class UsuarioController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @PostMapping
-    public Usuario criarUsuario(@RequestBody Usuario usuario) {
-        return usuarioRepository.save(usuario);
-    }
-
     @GetMapping
-    public List<Usuario> listarUsuarios() {
+    public List<Usuario> listarTodos() {
         return usuarioRepository.findAll();
     }
 
-    @PutMapping("/{id}")
-    public Usuario atualizarUsuario(@PathVariable String id, @RequestBody Usuario usuarioAtualizado) {
-        Usuario usuario = usuarioRepository.findById(id).orElseThrow();
-        usuario.setNome(usuarioAtualizado.getNome());
-        usuario.setCartaoCredito(usuarioAtualizado.getCartaoCredito());
-        usuario.setSaldo(usuarioAtualizado.getSaldo());
+    @GetMapping("/{id}")
+    public Usuario buscarPorId(@PathVariable String id) {
+        return usuarioRepository.findById(id).orElse(null);
+    }
+
+    @PostMapping
+    public Usuario criar(@RequestBody Usuario usuario) {
         return usuarioRepository.save(usuario);
+    }
+
+    @PutMapping("/{id}")
+    public Usuario atualizar(@PathVariable String id, @RequestBody Usuario usuarioAtualizado) {
+        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        if (usuario != null) {
+            usuario.setNome(usuarioAtualizado.getNome());
+            usuario.setCartaoCredito(usuarioAtualizado.getCartaoCredito());
+            usuario.setSaldo(usuarioAtualizado.getSaldo());
+            return usuarioRepository.save(usuario);
+        }
+        return null;
+    }
+
+    @DeleteMapping("/{id}")
+    public void deletar(@PathVariable String id) {
+        usuarioRepository.deleteById(id);
     }
 }

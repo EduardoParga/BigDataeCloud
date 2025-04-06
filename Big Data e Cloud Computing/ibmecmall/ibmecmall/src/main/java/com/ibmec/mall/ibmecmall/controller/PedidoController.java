@@ -1,76 +1,107 @@
 package com.ibmec.mall.ibmecmall.controller;
 
-import com.ibmec.mall.ibmecmall.model.Pedido;
-import com.ibmec.mall.ibmecmall.model.Produto;
-import com.ibmec.mall.ibmecmall.model.Usuario;
-import com.ibmec.mall.ibmecmall.repository.PedidoRepository;
-import com.ibmec.mall.ibmecmall.repository.ProdutoRepository;
-import com.ibmec.mall.ibmecmall.repository.UsuarioRepository;
+import com.ibmec.mall.ibmecmall.model.*;
+import com.ibmec.mall.ibmecmall.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 
 @RestController
-@RequestMapping("/pedidos")
+@RequestMapping("/pedido")
 public class PedidoController {
 
-    @Autowired
-    private PedidoRepository pedidoRepository;
+    private static final Logger logger = LoggerFactory.getLogger(PedidoController.class);
 
     @Autowired
-    private ProdutoRepository produtoRepository;
+    private PedidoRepository pedidoRepo;
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private UsuarioRepository usuarioRepo;
 
-    // Novo endpoint GET básico para evitar erro 405
-    @GetMapping
-    public String home() {
-        return "Endpoint de pedidos ativo. Use POST para criar pedidos.";
-    }
+    @Autowired
+    private ProdutoRepository produtoRepo;
 
+    // [Regra] POST /pedido → Criar um novo pedido
     @PostMapping
-    public Object criarPedido(@RequestBody Pedido pedido) {
-        Usuario usuario = usuarioRepository.findById(pedido.getIdUsuario()).orElse(null);
-        Produto produto = produtoRepository.findById(pedido.getIdProduto()).orElse(null);
+    @Transactional
+    public ResponseEntity<?> criarPedido(@Valid @RequestBody PedidoRequest request) {
+        try {
+            // 1. Valida usuário e produto
+            Usuario usuario = usuarioRepo.findById(request.getIdUsuario())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        if (usuario == null || produto == null) {
-            return "Usuário ou Produto não encontrado";
+            Produto produto = produtoRepo.findById(request.getIdProduto())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+
+            // 2. Valida saldo e estoque
+            double valorTotal = produto.getPreco() * request.getQuantidade();
+
+            if (usuario.getSaldo() < valorTotal) {
+                return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
+                        .body("Saldo insuficiente no cartão");
+            }
+
+            if (produto.getEstoque() < request.getQuantidade()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Estoque insuficiente");
+            }
+
+            // 3. Atualiza saldo e estoque
+            usuario.setSaldo(usuario.getSaldo() - valorTotal);
+            produto.setEstoque(produto.getEstoque() - request.getQuantidade());
+
+            usuarioRepo.save(usuario);
+            produtoRepo.save(produto);
+
+            // 4. Cria o pedido
+            Pedido pedido = new Pedido();
+            pedido.setIdUsuario(request.getIdUsuario());
+            pedido.setIdProduto(request.getIdProduto());
+            pedido.setQuantidade(request.getQuantidade());
+            pedido.setTotal(valorTotal);
+
+            Pedido pedidoSalvo = pedidoRepo.save(pedido);
+            logger.info("Pedido criado com sucesso: ID {}", pedidoSalvo.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(pedidoSalvo);
+
+        } catch (ResponseStatusException e) {
+            logger.error("Erro na requisição: {}", e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao processar o pedido: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao processar pedido: " + e.getMessage());
         }
-
-        double total = produto.getPreco() * pedido.getQuantidade();
-
-        if (usuario.getSaldo() < total) {
-            return "Saldo insuficiente no cartão de crédito";
-        }
-
-        usuario.setSaldo(usuario.getSaldo() - total);
-        usuarioRepository.save(usuario);
-
-        pedido.setTotal(total);
-        return pedidoRepository.save(pedido);
     }
 
-    @GetMapping("/relatorio-vendas")
-    public List<Object> gerarRelatorio() {
-        List<Pedido> pedidos = pedidoRepository.findAll();
-        List<Object> relatorio = new ArrayList<>();
+    // Classe DTO interna
+    static class PedidoRequest {
+        @NotBlank(message = "ID do usuário é obrigatório")
+        private String idUsuario;
 
-        for (Pedido pedido : pedidos) {
-            Usuario usuario = usuarioRepository.findById(pedido.getIdUsuario()).orElse(null);
-            Produto produto = produtoRepository.findById(pedido.getIdProduto()).orElse(null);
+        @NotBlank(message = "ID do produto é obrigatório")
+        private String idProduto;
 
-            if (usuario != null && produto != null) {
-                Map<String, Object> item = new HashMap<>();
-                item.put("produto", produto.getNome());
-                item.put("usuario", usuario.getNome());
-                item.put("quantidade", pedido.getQuantidade());
-                item.put("total", pedido.getTotal());
-                relatorio.add(item);
-            }
-        }
+        @Min(value = 1, message = "Quantidade deve ser no mínimo 1")
+        private int quantidade;
 
-        return relatorio;
+        // Getters e Setters
+        public String getIdUsuario() { return idUsuario; }
+        public void setIdUsuario(String idUsuario) { this.idUsuario = idUsuario; }
+
+        public String getIdProduto() { return idProduto; }
+        public void setIdProduto(String idProduto) { this.idProduto = idProduto; }
+
+        public int getQuantidade() { return quantidade; }
+        public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
     }
 }

@@ -10,7 +10,6 @@ public class Produto {
 
     @Id
     private String id;
-
     private String nome;
     private Double preco;
     private String categoria;

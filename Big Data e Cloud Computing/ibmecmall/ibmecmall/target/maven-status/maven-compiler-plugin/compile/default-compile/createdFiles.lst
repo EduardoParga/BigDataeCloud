@@ -1,10 +1,13 @@
-com\ibmec\mall\ibmecmall\model\Produto.class
 com\ibmec\mall\ibmecmall\model\Usuario.class
 com\ibmec\mall\ibmecmall\controller\UsuarioController.class
 com\ibmec\mall\ibmecmall\repository\ProdutoRepository.class
+com\ibmec\mall\ibmecmall\repository\UsuarioRepository.class
+com\ibmec\mall\ibmecmall\model\Produto.class
+com\ibmec\mall\ibmecmall\model\RelatorioVendas.class
+com\ibmec\mall\ibmecmall\controller\RelatorioVendasController.class
 com\ibmec\mall\ibmecmall\controller\PedidoController.class
 com\ibmec\mall\ibmecmall\IbmecmallApplication.class
 com\ibmec\mall\ibmecmall\model\Pedido.class
 com\ibmec\mall\ibmecmall\repository\PedidoRepository.class
 com\ibmec\mall\ibmecmall\controller\ProdutoController.class
-com\ibmec\mall\ibmecmall\repository\UsuarioRepository.class
+com\ibmec\mall\ibmecmall\controller\PedidoController$PedidoRequest.class
