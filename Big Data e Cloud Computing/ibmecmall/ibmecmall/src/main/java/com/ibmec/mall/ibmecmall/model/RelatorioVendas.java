@@ -24,4 +24,4 @@ public class RelatorioVendas {
     public int getQuantidadeTotalItensVendidos() {
         return quantidadeTotalItensVendidos;
     }
-}
+} /* Teste */
